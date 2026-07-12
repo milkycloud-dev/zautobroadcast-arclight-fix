@@ -1,0 +1,8 @@
+.DS_Store
+Thumbs.db
+*.class
+patch/work/
+patch/asm-*.jar
+patch/ZabSendPatch.class
+*.log
+.env
