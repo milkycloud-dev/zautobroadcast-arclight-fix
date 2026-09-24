@@ -12,7 +12,7 @@ Download from [Releases](https://github.com/milkycloud-dev/zautobroadcast-arclig
 jar/ZAutoBroadcast-1.3-arclight.jar
 ```
 
-**Install:** drop into `plugins/` and **fully restart** the server. Do **not** use `plugman load` — Spigot LibraryLoader must fetch Adventure libraries on a clean plugin load.
+**Install:** drop into `plugins/` and **fully restart** the server. Do **not** use `plugman load`: Spigot LibraryLoader must fetch Adventure libraries on a clean plugin load.
 
 ---
 
@@ -51,12 +51,12 @@ On first boot, jars land under `libraries/net/kyori/...`.
 java.lang.NoSuchMethodError: 'void org.bukkit.entity.Player.sendMessage(net.kyori.adventure.text.Component)'
 ```
 
-**Cause:** the plugin sends chat via Paper’s `Player.sendMessage(Component)`. Bukkit/Spigot/Arclight only expose `sendMessage(String)`.
+**Cause:** the plugin sends chat via Paper's `Player.sendMessage(Component)`. Bukkit/Spigot/Arclight only expose `sendMessage(String)`.
 
-**Fix:** ASM patch on `ZAutoBroadcast.class` — all three `sendMessage(Component)` call sites become:
+**Fix:** ASM patch on `ZAutoBroadcast.class`. All three `sendMessage(Component)` call sites become:
 
-1. `MiniMessage.deserialize(...)` → `Component`
-2. `LegacyComponentSerializer.legacySection().serialize(component)` → legacy `String` with § codes
+1. `MiniMessage.deserialize(...)` produces a `Component`
+2. `LegacyComponentSerializer.legacySection().serialize(component)` turns it into a legacy `String` with § codes
 3. `CommandSender.sendMessage(String)`
 
 ---
@@ -71,13 +71,13 @@ IncompatibleClassChangeError: Method 'LegacyComponentSerializer.legacySection()'
 
 **Cause:** in Adventure 4.x, `LegacyComponentSerializer` is an **interface**. The static `legacySection()` call must use `isInterface=true` in bytecode. An earlier patch used `false`.
 
-**Fix:** corrected `ZabSendPatch.java` (`INVOKESTATIC … legacySection`, `isInterface=true`).
+**Fix:** corrected `ZabSendPatch.java` (`INVOKESTATIC ... legacySection`, `isInterface=true`).
 
 ---
 
 ### 4. `plugman load` breaks the classloader
 
-**Symptom:** after `plugman unload/load` → `ClassNotFoundException: CommandUtils`, commands fail.
+**Symptom:** after `plugman unload/load` you get `ClassNotFoundException: CommandUtils`, commands fail.
 
 **Fix:** replace the JAR and do a **full server restart** only.
 
@@ -93,11 +93,11 @@ IncompatibleClassChangeError: Method 'LegacyComponentSerializer.legacySection()'
 
 **Permission:** `zautobroadcast.admin`
 
-**Keys:** case-sensitive — `Forced`, not `forced` (unless you add your own key in YAML).
+**Keys** are case-sensitive: `Forced`, not `forced` (unless you add your own key in YAML).
 
 **Audience:** all players **online** when the broadcast runs.
 
-**Format:** MiniMessage (`<green>`, `<bold>`, gradients, etc.), not `&` — see [MiniMessage docs](https://docs.advntr.dev/minimessage/format.html).
+**Format:** MiniMessage (`<green>`, `<bold>`, gradients, etc.), not `&`. See [MiniMessage docs](https://docs.advntr.dev/minimessage/format.html).
 
 ---
 
@@ -133,7 +133,7 @@ README.md
 
 ## Limitations
 
-- Does **not** add full Paper Adventure API to Arclight — only a workaround for ZAutoBroadcast.
+- Does **not** add the full Paper Adventure API to Arclight, it is only a workaround for ZAutoBroadcast.
 - Rich MiniMessage (hover, click, some gradients) may degrade when converted to legacy § strings; basic colors/styles usually work.
 - PlaceholderAPI works when installed (same as upstream).
 - **ZAutoBroadcast** copyright remains with **zepsizola**. This is an unofficial patch; use at your own risk.
@@ -142,7 +142,7 @@ README.md
 
 ## License
 
-Patch, build scripts, and documentation — **MIT** ([LICENSE](LICENSE)).
+Patch, build scripts, and documentation: **MIT** ([LICENSE](LICENSE)).
 
 The upstream ZAutoBroadcast plugin is a separate product; respect its distribution terms.
 
@@ -150,7 +150,7 @@ The upstream ZAutoBroadcast plugin is a separate product; respect its distributi
 
 ## Credits
 
-- [ZAutoBroadcast](https://www.spigotmc.org/resources/zautobroadcast.113876/) — zepsizola  
+- [ZAutoBroadcast](https://www.spigotmc.org/resources/zautobroadcast.113876/) by zepsizola  
 - [Kyori Adventure](https://github.com/KyoriPowered/adventure)  
 - [Arclight](https://github.com/IzzelAliz/Arclight)
 
@@ -171,7 +171,7 @@ The upstream ZAutoBroadcast plugin is a separate product; respect its distributi
 jar/ZAutoBroadcast-1.3-arclight.jar
 ```
 
-**Установка:** положите в `plugins/` и сделайте **полный рестарт** сервера. **Не** используйте `plugman load` — LibraryLoader должен подтянуть Adventure при чистой загрузке плагина.
+**Установка:** положите в `plugins/` и сделайте **полный рестарт** сервера. **Не** используйте `plugman load`: LibraryLoader должен подтянуть Adventure при чистой загрузке плагина.
 
 ---
 
@@ -187,7 +187,7 @@ java.lang.NoClassDefFoundError: net/kyori/adventure/text/minimessage/MiniMessage
 
 Авто-рассылки и MiniMessage-формат не работали.
 
-**Причина:** ZAutoBroadcast собран под Paper и ожидает Adventure MiniMessage в classpath. На Paper библиотека встроена; на **Arclight/Spigot** её нет, а в оригинальном `plugin.yml` не было `libraries:` — Spigot LibraryLoader не скачивал зависимости.
+**Причина:** ZAutoBroadcast собран под Paper и ожидает Adventure MiniMessage в classpath. На Paper библиотека встроена; на **Arclight/Spigot** её нет, а в оригинальном `plugin.yml` не было `libraries:`, поэтому Spigot LibraryLoader не скачивал зависимости.
 
 **Решение:** в `plugin.yml` добавлены Maven-зависимости Kyori Adventure **4.17.0**:
 
@@ -212,10 +212,10 @@ java.lang.NoSuchMethodError: 'void org.bukkit.entity.Player.sendMessage(net.kyor
 
 **Причина:** плагин шлёт сообщения через Paper-метод `Player.sendMessage(Component)`. В Bukkit/Spigot/Arclight есть только `sendMessage(String)`.
 
-**Решение:** ASM-патч `ZAutoBroadcast.class` — три вызова `sendMessage(Component)` заменены на:
+**Решение:** ASM-патч `ZAutoBroadcast.class`, три вызова `sendMessage(Component)` заменены на:
 
-1. `MiniMessage.deserialize(...)` → `Component`
-2. `LegacyComponentSerializer.legacySection().serialize(component)` → `String` с §-кодами
+1. `MiniMessage.deserialize(...)` даёт `Component`
+2. `LegacyComponentSerializer.legacySection().serialize(component)` превращает его в `String` с §-кодами
 3. `CommandSender.sendMessage(String)`
 
 ---
@@ -228,17 +228,17 @@ java.lang.NoSuchMethodError: 'void org.bukkit.entity.Player.sendMessage(net.kyor
 IncompatibleClassChangeError: Method 'LegacyComponentSerializer.legacySection()' must be InterfaceMethodref constant
 ```
 
-**Причина:** в Adventure 4.x `LegacyComponentSerializer` — **интерфейс**. Статический `legacySection()` в байткоде должен вызываться с `isInterface=true`. Первая версия патча использовала `false`.
+**Причина:** в Adventure 4.x `LegacyComponentSerializer` это **интерфейс**. Статический `legacySection()` в байткоде должен вызываться с `isInterface=true`. Первая версия патча использовала `false`.
 
-**Решение:** исправлен `ZabSendPatch.java` (`INVOKESTATIC … legacySection`, `isInterface=true`).
+**Решение:** исправлен `ZabSendPatch.java` (`INVOKESTATIC ... legacySection`, `isInterface=true`).
 
 ---
 
 ### 4. `plugman load` ломает classloader
 
-**Симптом:** после `plugman unload/load` — `ClassNotFoundException: CommandUtils`, команды падают.
+**Симптом:** после `plugman unload/load` вылетает `ClassNotFoundException: CommandUtils`, команды падают.
 
-**Решение:** после замены JAR — только **полный рестарт** сервера.
+**Решение:** после замены JAR нужен только **полный рестарт** сервера.
 
 ---
 
@@ -252,11 +252,11 @@ IncompatibleClassChangeError: Method 'LegacyComponentSerializer.legacySection()'
 
 **Права:** `zautobroadcast.admin`
 
-**Ключи:** регистр важен — `Forced`, не `forced` (если не добавлен свой ключ в YAML).
+**Ключи** чувствительны к регистру: `Forced`, не `forced` (если не добавлен свой ключ в YAML).
 
 **Кому видно:** всем игрокам **онлайн** в момент отправки.
 
-**Формат:** MiniMessage (`<green>`, `<bold>`, градиенты и т.д.), не `&` — см. [документацию MiniMessage](https://docs.advntr.dev/minimessage/format.html).
+**Формат:** MiniMessage (`<green>`, `<bold>`, градиенты и т.д.), не `&`. См. [документацию MiniMessage](https://docs.advntr.dev/minimessage/format.html).
 
 ---
 
@@ -292,23 +292,23 @@ README.md
 
 ## Ограничения
 
-- Патч **не** добавляет полноценный Paper Adventure API на Arclight — только обход для ZAutoBroadcast.
+- Патч **не** добавляет полноценный Paper Adventure API на Arclight, это только обход для ZAutoBroadcast.
 - Сложный MiniMessage (hover, click, gradient) частично теряется при конвертации в legacy §-строки; простые цвета и стили обычно работают.
 - PlaceholderAPI поддерживается, если установлен (как в оригинале).
-- Авторские права на **ZAutoBroadcast** принадлежат **zepsizola**. Неофициальный патч — на ваш риск.
+- Авторские права на **ZAutoBroadcast** принадлежат **zepsizola**. Неофициальный патч используется на ваш риск.
 
 ---
 
 ## Лицензия
 
-Патч, скрипты сборки и документация — **MIT** ([LICENSE](LICENSE)).
+Патч, скрипты сборки и документация: **MIT** ([LICENSE](LICENSE)).
 
-Оригинальный ZAutoBroadcast — отдельный продукт; соблюдайте условия его распространения.
+Оригинальный ZAutoBroadcast это отдельный продукт, соблюдайте условия его распространения.
 
 ---
 
 ## Благодарности
 
-- [ZAutoBroadcast](https://www.spigotmc.org/resources/zautobroadcast.113876/) — zepsizola  
+- [ZAutoBroadcast](https://www.spigotmc.org/resources/zautobroadcast.113876/), автор zepsizola  
 - [Kyori Adventure](https://github.com/KyoriPowered/adventure)  
 - [Arclight](https://github.com/IzzelAliz/Arclight)
