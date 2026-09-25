@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Compile the patch class
+        run: |
+          python3 -m py_compile patch/build.py
+          curl -fsSL -o /tmp/asm.jar https://repo1.maven.org/maven2/org/ow2/asm/asm/9.7/asm-9.7.jar
+          mkdir -p /tmp/out && javac -d /tmp/out -cp /tmp/asm.jar patch/ZabSendPatch.java
+          ls /tmp/out
+
+      - name: Package the patch kit
+        run: |
+          name="zautobroadcast-arclight-patch-${GITHUB_REF_NAME#v}"
+          mkdir "$name" && cp -r patch README.md LICENSE CHANGELOG.md "$name"/
+          zip -qr "$name.zip" "$name"
+
+      - name: Release notes
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          awk -v v="$ver" '/^## / {p = ($2 == v); next} p' CHANGELOG.md > notes.md
+          test -s notes.md || echo "Release $GITHUB_REF_NAME" > notes.md
+
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: ZAutoBroadcast Arclight Fix ${{ github.ref_name }}
+          body_path: notes.md
+          files: zautobroadcast-arclight-patch-*.zip
